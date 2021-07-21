@@ -24,10 +24,10 @@ plugins {
  * Set proper values for the following fields
  */
 
-group = "<< group name >>"
-version = "<< version >>"
+group = "ucf.assignments"
+version = "0.0.1"
 
-application.mainClassName = "<< name/of/main/class >>"
+application.mainClassName = "$moduleName/ucf.assignments.App"
 application.applicationName = rootProject.name // change the application name if want
 
 javafx.version = "11.0.2"
@@ -54,6 +54,9 @@ repositories {
  * more dependencies as required
  */
 dependencies {
+
+    implementation 'com.google.code.gson:gson:2.8.7'
+
     // logging dependency
     //implementation "org.apache.logging.log4j:log4j-api:2.11.1"
     //implementation "org.apache.logging.log4j:log4j-core:2.11.1"
