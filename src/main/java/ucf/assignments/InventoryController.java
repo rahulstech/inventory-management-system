@@ -1,6 +1,9 @@
+/*
+ * UCF COP3330 Summer 2021 Assignment 5 Solution
+ * Copyright 2021 first_name last_name
+ */
 package ucf.assignments;
 
-import com.google.gson.Gson;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.event.ActionEvent;
 import javafx.fxml.Initializable;
@@ -12,17 +15,12 @@ import java.io.*;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.ResourceBundle;
 
+import static ucf.assignments.ImportExportHelper.Type.*;
+
 public class InventoryController implements Initializable {
-
-
-
-    enum ExportType {
-        TSV,
-        HTML,
-        JSON;
-    }
 
     public Label lblInventoryItemInput;
     public TextField inputSerialNo;
@@ -39,8 +37,8 @@ public class InventoryController implements Initializable {
     public MenuItem itemHTML;
     public MenuItem itemJSON;
 
-
     private InventoryStorage storage;
+    private Optional<InventoryItem> selection = Optional.empty();
 
     public InventoryController() {
         storage = InventoryStorage.getInstance();
@@ -57,23 +55,42 @@ public class InventoryController implements Initializable {
         inventoryItemsTable.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
     }
 
-    public void onClickExportMenu(ActionEvent e) {
-        Object src = e.getSource();
-        if (itemTSV == src) {
-            export(ExportType.TSV);
-        }
-        else if (itemHTML == src) {
-            export(ExportType.HTML);
-        }
-        else if (itemJSON == src) {
-            export(ExportType.JSON);
+    public void onClickLoadItems() {
+        FileChooser chooser = new FileChooser();
+        chooser.setTitle("Choose Source File");
+        chooser.getExtensionFilters().addAll(
+                getExtensionFilter(TSV),
+                getExtensionFilter(HTML),
+                getExtensionFilter(JSON));
+        File selected = chooser.showOpenDialog(App.getMainWindow());
+        if (null == selected) return;
+        try {
+            List<InventoryItem> items = ImportExportHelper.importFrom(selected);
+            storage.addAllItems(items);
+        } catch (Exception e) {
+            e.printStackTrace();
+            showDialog("Import Error", e.getMessage(), Alert.AlertType.ERROR);
         }
     }
 
-    public void onClickClear(ActionEvent e) {
+    public void onClickExportMenu(ActionEvent e) {
+        Object src = e.getSource();
+        if (itemTSV == src) {
+            export(TSV);
+        }
+        else if (itemHTML == src) {
+            export(HTML);
+        }
+        else if (itemJSON == src) {
+            export(JSON);
+        }
+    }
+
+    public void onClickCancel() {
         inputSerialNo.setText(null);
         inputName.setText(null);
         inputValue.setText(null);
+        selection = Optional.empty();
     }
 
     public void onClickSave() {
@@ -81,31 +98,61 @@ public class InventoryController implements Initializable {
             InventoryItem item = new InventoryItem();
             item.setSerialNo(inputSerialNo.getText());
             item.setName(inputName.getText());
-            item.setValue(Float.valueOf(inputValue.getText()));
-            if (!storage.addNewInventoryItem(item)) {
+            item.setValue(Float.parseFloat(inputValue.getText()));
+
+            boolean saved;
+            if (selection.isEmpty()) {
+                saved = storage.addNewInventoryItem(item);
+            }
+            else {
+                InventoryItem selected = selection.get();
+                saved = storage.updateInventoryItem(selected.getSerialNo(),item);
+            }
+            if (!saved) {
                 showDialog("Save Error",
                         "Another item with same serial no already exists",
                         Alert.AlertType.ERROR);
+            }
+            else {
+                selection = Optional.empty();
             }
         }
     }
 
     public void onSearchInventoryItem(ActionEvent e) {
         Object src = e.getSource();
+        String searchPhrase = inputSearch.getText();
+        InventoryItem item;
         if (btnSearchName == src) {
-
+            item = storage.findInventoryItemByName(searchPhrase);
         }
-        else if (btnSearchSerialNo == src) {
-
+        else {
+            item = storage.findInventoryItemBySerialNo(searchPhrase);
+        }
+        if (null == item) {
+            showDialog("Search Inventory Item", "No inventory item found for the given search", Alert.AlertType.ERROR);
+        }
+        else {
+            String message = "SERIAL NO.: "+item.getSerialNo()+
+                    "\nNAME: "+item.getName()+
+                    "\nVALUE: "+ String.format("%.2f",item.getValue());
+            showDialog("Search Inventory Item",message, Alert.AlertType.INFORMATION);
         }
     }
 
     public void onClickDeleteInventoryItem() {
-        // TODO: implement delete item
+        InventoryItem item = inventoryItemsTable.getSelectionModel()
+                .getSelectedItem();
+        storage.removeInventoryItem(item);
     }
 
     public void onClickEditInventoryItem() {
-        // TODO: implement edit item
+        InventoryItem item = inventoryItemsTable.getSelectionModel()
+                .getSelectedItem();
+        inputSerialNo.setText(item.getSerialNo());
+        inputName.setText(item.getName());
+        inputValue.setText(String.format("%.2f",item.getValue()));
+        selection = Optional.of(item);
     }
 
     private boolean validateOrShowErrorMessage() {
@@ -145,65 +192,31 @@ public class InventoryController implements Initializable {
         return true;
     }
 
-    private void export(ExportType type) {
+    private void export(ImportExportHelper.Type type) {
         FileChooser chooser = new FileChooser();
         chooser.setTitle("Export Inventory Data");
-        if (ExportType.TSV == type) {
-            chooser.getExtensionFilters()
-                    .add(new FileChooser.ExtensionFilter("TSV","txt"));
-        }
-        else if (ExportType.HTML == type) {
-            chooser.getExtensionFilters()
-                    .add(new FileChooser.ExtensionFilter("HTML","html"));
-        }
-        else {
-            chooser.getExtensionFilters()
-                    .add(new FileChooser.ExtensionFilter("JSON","json"));
-        }
+        FileChooser.ExtensionFilter filter = getExtensionFilter(type);
+        chooser.getExtensionFilters().add(filter);
         File selected = chooser.showSaveDialog(App.getMainWindow());
         if (null == selected) return;
-        try (FileWriter writer = new FileWriter(selected)) {
-            List<InventoryItem> items = storage.getAllItems();
-            if (ExportType.TSV == type) {
-                exportToTSV(writer,items);
-            }
-            else if (ExportType.HTML == type) {
-                exportToHTML(writer,items);
-            }
-            else {
-                exportToJSON(writer,items);
-            }
+        try {
+            ImportExportHelper.exportTo(selected,type,storage.getAllItems());
         }
         catch (Exception e) {
             showDialog("Export Error", e.getMessage(), Alert.AlertType.ERROR);
         }
     }
 
-    private void exportToTSV(Writer writer, List<InventoryItem> items) {
-        PrintWriter pw = new PrintWriter(writer);
-        for (InventoryItem item : items) {
-            pw.println(item.getSerialNo()+"\t"+item.getName()+"\t"+String.format("$%.2f",item.getValue()));
+    private FileChooser.ExtensionFilter getExtensionFilter(ImportExportHelper.Type type) {
+        if (TSV == type) {
+            return new FileChooser.ExtensionFilter(type.getDescription(),type.getExtension());
         }
-    }
-
-    private void exportToHTML(Writer writer, List<InventoryItem> items) {
-        PrintWriter pw = new PrintWriter(writer);
-        pw.println("<html><body><table>");
-        pw.println("<tr><td>Serial No.</td><td>Name</td><td>Value</td></tr>");
-        for (InventoryItem item : items) {
-            pw.println("<tr>");
-            pw.println("<td>"+item.getSerialNo()+"</td>");
-            pw.println("<td>"+item.getName()+"</td>");
-            pw.println(String.format("<td>$%.2f</td>",item.getValue()));
-            pw.println("</td>");
-            pw.println("</tr>");
+        else if (HTML == type) {
+            return new FileChooser.ExtensionFilter(type.getDescription(),type.getExtension());
         }
-        pw.println("</table></body></html>");
-    }
-
-    private void exportToJSON(Writer writer, List<InventoryItem> item) {
-        Gson gson = new Gson();
-        gson.toJson(item,writer);
+        else {
+            return new FileChooser.ExtensionFilter(type.getDescription(),type.getExtension());
+        }
     }
 
     private boolean isEmptyString(String s) {
@@ -212,7 +225,7 @@ public class InventoryController implements Initializable {
 
     private void showDialog(String title, String message, Alert.AlertType type) {
         Alert alert = new Alert(type);
-        alert.setTitle(title);
+        alert.setHeaderText(title);
         alert.setContentText(message);
         alert.show();
     }

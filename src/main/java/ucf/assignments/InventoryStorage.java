@@ -3,11 +3,15 @@ package ucf.assignments;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
+import java.util.List;
+
 public class InventoryStorage {
 
     private static InventoryStorage mInstance;
 
-    private ObservableList<InventoryItem> items = FXCollections.observableArrayList();
+    ObservableList<InventoryItem> items = FXCollections.observableArrayList();
+
+    private InventoryStorage() {}
 
     public static InventoryStorage getInstance() {
         if (null == mInstance) {
@@ -16,23 +20,40 @@ public class InventoryStorage {
         return mInstance;
     }
 
-    void addSampleData() {
-        //$399.00 AXB124AXY3 Xbox One
-        //$599.99 S40AZBDE47 Samsung TV
+    static InventoryStorage getTestInstance() {
+        InventoryStorage storage = new InventoryStorage();
+        storage.addSampleData();
+        return storage;
+    }
 
+    void addSampleData() {
         InventoryItem xbox = new InventoryItem("AXB124AXY3",399, "Xbox One");
         InventoryItem tv = new InventoryItem("S40AZBDE47",599.99f,"Samsung TV");
 
-        addNewInventoryItem(xbox);
-        addNewInventoryItem(tv);
-
+        items.add(xbox);
+        items.add(tv);
     }
 
     public boolean addNewInventoryItem(InventoryItem item) {
-        if (null != findInventoryItemBySerialNo(item.getSerialNo()))
+        if (!items.contains(item)) {
+            items.add(item);
+            return true;
+        }
+        return false;
+    }
+
+    public boolean updateInventoryItem(String serialNo, InventoryItem item) {
+        if (!serialNo.equals(item.getSerialNo())
+                && items.contains(item)) {
             return false;
-        items.add(item);
-        return true;
+        }
+        for (int i = 0; i < items.size(); i++) {
+            if (serialNo.equals(items.get(i).getSerialNo())) {
+                items.set(i,item);
+                return true;
+            }
+        }
+        return false;
     }
 
     public InventoryItem findInventoryItemBySerialNo(String serialNo) {
@@ -44,12 +65,26 @@ public class InventoryStorage {
         return null;
     }
 
-    public void removeInventoryItem(String serialNo) {
-        InventoryItem item = findInventoryItemBySerialNo(serialNo);
+    public InventoryItem findInventoryItemByName(String name) {
+        for (InventoryItem item : items) {
+            if (item.getName().equals(name)) {
+                return item;
+            }
+        }
+        return null;
+    }
+
+    public void removeInventoryItem(InventoryItem item) {
         items.remove(item);
     }
 
     public ObservableList<InventoryItem> getAllItems() {
         return items;
+    }
+
+    public void addAllItems(List<InventoryItem> items) {
+        for (InventoryItem item : items) {
+            addNewInventoryItem(item);
+        }
     }
 }

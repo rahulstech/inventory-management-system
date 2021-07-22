@@ -1,3 +1,7 @@
+/*
+ * UCF COP3330 Summer 2021 Assignment 5 Solution
+ * Copyright 2021 first_name last_name
+ */
 package ucf.assignments;
 
 import java.util.Objects;
@@ -54,5 +58,14 @@ public class InventoryItem {
         return this.value == o.value &&
                 this.serialNo.equals(o.serialNo) &&
                 this.name.equals(o.name);
+    }
+
+    @Override
+    public String toString() {
+        return "InventoryItem{" +
+                "serialNo='" + serialNo + '\'' +
+                ", value=" + value +
+                ", name='" + name + '\'' +
+                '}';
     }
 }

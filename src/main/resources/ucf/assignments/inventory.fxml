@@ -18,13 +18,13 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.text.Font?>
 
-
-<BorderPane minWidth="900.0" xmlns="http://javafx.com/javafx/15.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ucf.assignments.InventoryController">
+<BorderPane minHeight="620.0" minWidth="900.0" xmlns="http://javafx.com/javafx/15.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ucf.assignments.InventoryController">
    <top>
       <MenuBar BorderPane.alignment="CENTER">
         <menus>
-          <Menu mnemonicParsing="false" text="Save">
-            <items>
+            <Menu mnemonicParsing="false" text="File">
+              <items>
+                <MenuItem mnemonicParsing="false" onAction="#onClickLoadItems" text="Load Items" />
                   <Menu mnemonicParsing="false" text="Export">
                     <items>
                       <MenuItem fx:id="itemTSV" mnemonicParsing="false" onAction="#onClickExportMenu" text="TSV (Tab Separated Value)" />
@@ -32,8 +32,8 @@
                         <MenuItem fx:id="itemJSON" mnemonicParsing="false" onAction="#onClickExportMenu" text="JSON" />
                     </items>
                   </Menu>
-            </items>
-          </Menu>
+              </items>
+            </Menu>
         </menus>
       </MenuBar>
    </top>
@@ -77,7 +77,7 @@
                         <Font size="16.0" />
                      </font>
                   </TextField>
-                  <Button layoutX="72.0" layoutY="334.0" mnemonicParsing="false" onAction="#onClickClear" text="Clear">
+                  <Button layoutX="72.0" layoutY="334.0" mnemonicParsing="false" onAction="#onClickCancel" text="Cancel">
                      <font>
                         <Font size="14.0" />
                      </font>
@@ -109,7 +109,7 @@
             <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="ALWAYS" />
         </rowConstraints>
          <children>
-            <TableView fx:id="inventoryItemsTable" GridPane.columnSpan="2147483647" GridPane.rowIndex="1" GridPane.rowSpan="2">
+            <TableView fx:id="inventoryItemsTable" editable="true" GridPane.columnSpan="2147483647" GridPane.rowIndex="1" GridPane.rowSpan="2">
               <columns>
                 <TableColumn fx:id="colValue" minWidth="50.0" prefWidth="-1.0" text="Value" />
                 <TableColumn fx:id="colSerialNo" minWidth="100.0" prefWidth="-1.0" text="Serial Number" />
@@ -130,7 +130,7 @@
                   <Font size="16.0" />
                </font>
             </TextArea>
-            <Button fx:id="btnSearchName" mnemonicParsing="false" text="Serach By Name" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.valignment="CENTER" />
+            <Button fx:id="btnSearchName" mnemonicParsing="false" onAction="#onSearchInventoryItem" text="Serach By Name" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.valignment="CENTER" />
             <Button fx:id="btnSearchSerialNo" mnemonicParsing="false" onAction="#onSearchInventoryItem" text="Search By Searial No" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.valignment="CENTER" />
             <Button mnemonicParsing="false" onAction="#onClickDeleteInventoryItem" text="Delete" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="3">
                <font>
