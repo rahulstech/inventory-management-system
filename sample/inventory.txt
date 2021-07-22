@@ -1,0 +1,3 @@
+Serial Number	Name	Value
+AXB124AXY3	Xbox One	399.00
+S40AZBDE47	Samsung TV	599.99

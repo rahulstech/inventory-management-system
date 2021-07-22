@@ -46,7 +46,6 @@ public class InventoryController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        storage.addSampleData();
         colValue.setCellValueFactory(param ->
                 new SimpleStringProperty(String.format("$%.2f",param.getValue().getValue())));
         colSerialNo.setCellValueFactory(new PropertyValueFactory<>("serialNo"));
